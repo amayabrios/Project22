@@ -1,5 +1,7 @@
 import requests
 import os
+import pandas as pd
+
 
 class API_queries:
     api_key = os.environ['movie_db_api_key']
@@ -41,8 +43,8 @@ class API_queries:
 
 
 class Movie(API_queries):
-    def __init__(self):
-        self.movie_id: int = None
+    def __init__(self, movie_id=None):
+        self.movie_id: int = movie_id
 
     def ask_year(self):
         '''
@@ -59,33 +61,67 @@ class Movie(API_queries):
         search and find a new movie to add to database
         :return: None
         '''
+
         title = input("Please share the name of a movie you like: ")
-        # title = title.replace(' ', '+')
+        def search_loop(title):
+            results = API_queries().search(title)
+            # more than one movie result
+            if len(results) > 1:
+                year = self.ask_year()
+                for r in results:
+                    if r['release_date'][:4] == year:
+                        self.movie_id = r['id']
+                        break
 
-        results = API_queries().search(title)
-        if len(results) > 1:
-            year = self.ask_year()
-            for r in results:
-                if r['release_date'][:4] == year:
-                    self.movie_id = r['id']
-        else:
-            self.movie_id = results[0]['id']
-        return
+            # no movie results
+            elif not results:
+                print(f'No results for {title}')
+                new_title = input("Try searching for another movie or type 'exit' to quit program: ")
+                if new_title == 'exit':
+                    return
+                else:
+                    search_loop(new_title)
 
-    def update_dp(self):
+            # only one search result
+            else:
+                verify = input("Is this the movie you were looking for? (y/n) ")
+                if verify == 'y':
+                    self.movie_id = results[0]['id']
+                else:
+                    self.ask_title()
+            return
+
+        search_loop(title)
+
+    def update(self):
         '''
-
+        find and replace feature of movie
         :return:
         '''
         # TODO
 
-m = API_queries().get_details('12444')
-# print(type(os.environ['movie_db_api_key']))
-# print(os.environ['movie_db_api_key'])
-print(m)
+    def add(self):
+        # add a new movie and it's features to the db
 
-# m = Movie()
-# m.ask_title()
-# id_ = m.movie_id
-# print(id_)
+        details = API_queries().get_details(self.movie_id)
+        new_data = {'movie_id': self.movie_id,
+                    'budget': details['budget'],
+                    'genres': details['genres'],
+                    'original_language': details['original_language'],
+                    'release_date': details['release_date'][:4],
+                    'revenue': details['revenue'],
+                    'runtime': details['runtime'],
+                    'spoken_languages': details['spoken_languages'],
+                    'title': details['title']
+        }
 
+        # Make data frame of above data
+        df = pd.DataFrame(new_data)
+
+        # append data frame to CSV file
+        df.to_csv('movie_directory.csv', index=False, header=False)
+
+    # def drive(self):
+
+a = API_queries()
+m = Movie()
