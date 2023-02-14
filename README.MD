@@ -1,4 +1,5 @@
 # Project22
+#### NOTE: This project has been put on pause. Progress will continue after the Spotify forecasting project is finished. 
 
 ### Summary:
 The goal of this program is to expose people to film outside the American mainstream, the "hidden gems" types of movies. 
